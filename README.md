@@ -33,6 +33,8 @@ func app(context *httpcanvas.Context) {
     context.LineWidth(5)
     context.StrokeStyle("#003300")
     context.Stroke()
+    
+    context.ShowFrame()
 }
 
 func main() {
