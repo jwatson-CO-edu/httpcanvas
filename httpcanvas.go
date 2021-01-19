@@ -44,6 +44,7 @@ func (c *Canvas) renderHtml(w http.ResponseWriter, r *http.Request) error {
 <!-- http://www.html5canvastutorials.com/tutorials/html5-canvas-lines/ -->
 <html>
   <head>
+    <link rel="icon" href="data:,"> <!-- https://stackoverflow.com/a/38917888 -->
     <script src="/jquery.js"></script>
     <style>
       body {
