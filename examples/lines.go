@@ -13,6 +13,8 @@ func app(context *httpcanvas.Context) {
 		context.Stroke()
 
 		time.Sleep(1 * time.Second)
+		
+		context.ShowFrame()
 	}
 }
 
