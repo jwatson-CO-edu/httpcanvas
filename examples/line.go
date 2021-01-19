@@ -16,6 +16,8 @@ func app(context *httpcanvas.Context) {
 	context.MoveTo(200, 50)
 	context.LineTo(50, 200)
 	context.Stroke()
+	
+	context.ShowFrame()
 }
 
 func main() {
