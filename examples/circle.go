@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/kbatten/httpcanvas"
+	"github.com/jwatson-CO-edu/httpcanvas"
 	"math"
 	"time"
 )
 
-func app(context *httpcanvas.Context) {
+func app(context *httpcanvas.Context){
 	centerX := context.Width / 2
 	centerY := context.Height / 2
 

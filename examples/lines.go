@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kbatten/httpcanvas"
+	"github.com/jwatson-CO-edu/httpcanvas"
 	"time"
 )
 
