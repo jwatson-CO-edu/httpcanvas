@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"strconv"
+  "strconv"
+  "io/ioutil"
 )
 
 type mouseMovement struct {
@@ -40,162 +41,12 @@ func (c *Canvas) updateUnique() {
 }
 
 func (c *Canvas) renderHtml(w http.ResponseWriter, r *http.Request) error {
-	container := `<!DOCTYPE HTML>
-<!-- http://www.html5canvastutorials.com/tutorials/html5-canvas-lines/ -->
-<html>
-  <head>
-    <link rel="icon" href="data:,"> <!-- https://stackoverflow.com/a/38917888 -->
-    <script src="/jquery.js"></script>
-    <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-      }
-      canvas {
-        border: 1px dashed rgb(170, 170, 170);
-        position:absolute; top:100px; left:100px;
-        visibility: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas width="{{.Width}}" height="{{.Height}}"></canvas>
-    <canvas width="{{.Width}}" height="{{.Height}}"></canvas>
-    <script>
-      var currentData = []
-      var canvases = document.getElementsByTagName('canvas');
-      var contexts = []
-      contexts[0] = canvases[0].getContext('2d');
-      contexts[1] = canvases[1].getContext('2d');
-      var context = contexts[0]
-      var bufferIndex = 0
-
-      var intervalId = 0
-
-      function getMoreCommands() {
-        if (currentData.length == 0) {
-          $.ajaxSetup({async: false});
-          try {
-            $.get("/command", {id:"{{.Unique}}"}, function(data) {
-              currentData = data.split("~");
-            })
-            .fail(function() {
-              currentData = ["END"]
-            });
-          } catch(e) {
-            currentData = ["END"]
-          }
-        }
-      }
-
-      var nextMouseMoveEvent = 0
-      function postMouseEvent(cmdName, e) {
-        if (e.offsetX == undefined) {
-          x = e.originalEvent.layerX;
-          y = e.originalEvent.layerY;
-        } else {
-          x = e.offsetX;
-          y = e.offsetY;
-        }
-        if (x == undefined || y == undefined) {
-          return;
-        }
-
-        if (cmdName == "MOUSEMOVE") {
-          var now = new Date().getTime();
-          if (now < nextMouseMoveEvent) {
-            return;
-          }
-          nextMouseMoveEvent = now + 30; // throttle to 30ms
-        }
-
-        var cmd = cmdName + " " + x + " " + y
-        $.ajaxSetup({async: true});
-        $.post("/command", {id:"{{.Unique}}", cmd:cmd})
-      }
-
-      function parseBool(b) {
-        return b == "true"
-      }
-
-      function drawFrame() {
-        getMoreCommands()
-        while (currentData.length > 0) {
-          var commandString = currentData.shift()
-          var command = commandString.split("|");
-          if (command[0] == "END") {
-            clearInterval(intervalId)
-          } else if (command[0] == "CLEARFRAME") {
-            contexts[bufferIndex].clearRect(
-                0, 0, canvases[bufferIndex].width,
-                canvases[bufferIndex].height);
-          } else if (command[0] == "SHOWFRAME") {
-            canvases[bufferIndex].style.visibility='visible';
-            canvases[1-bufferIndex].style.visibility='hidden';
-            bufferIndex = 1 - bufferIndex
-            context = contexts[bufferIndex]
-            break;
-          } else if (command[0] == "beginPath") {
-            context.beginPath();
-          } else if (command[0] == "moveTo") {
-            context.moveTo(parseFloat(command[1]), parseFloat(command[2]));
-          } else if (command[0] == "lineTo") {
-            context.lineTo(parseFloat(command[1]), parseFloat(command[2]));
-          } else if (command[0] == "stroke") {
-            context.stroke();
-          } else if (command[0] == "arc") {
-            context.arc(parseFloat(command[1]),
-              parseFloat(command[2]),
-              parseFloat(command[3]),
-              parseFloat(command[4]),
-              parseFloat(command[5]),
-              parseBool(command[6]));
-          } else if (command[0] == "fillStyle") {
-              context.fillStyle = command[1]
-          } else if (command[0] == "fill") {
-              context.fill()
-          } else if (command[0] == "lineWidth") {
-              context.lineWidth = parseFloat(command[1])
-          } else if (command[0] == "strokeStyle") {
-              context.strokeStyle = command[1]
-          } else if (command[0] == "fillRect") {
-              context.fillRect(parseFloat(command[1]),
-                parseFloat(command[2]),
-                parseFloat(command[3]),
-                parseFloat(command[4]))
-          } else if (command[0] == "strokeRect") {
-              context.strokeRect(parseFloat(command[1]),
-                parseFloat(command[2]),
-                parseFloat(command[3]),
-                parseFloat(command[4]))
-          } else if (command[0] == "clearRect") {
-              context.clearRect(parseFloat(command[1]),
-                parseFloat(command[2]),
-                parseFloat(command[3]),
-                parseFloat(command[4]))
-          }
-        }
-      }
-
-      $(canvases[0]).click(function(e) {
-        postMouseEvent("MOUSECLICK", e);
-      });
-	  $(canvases[0]).mousemove(function(e) {
-        postMouseEvent("MOUSEMOVE", e);
-      });
-
-      $(canvases[1]).click(function(e) {
-        postMouseEvent("MOUSECLICK", e);
-      });
-      $(canvases[1]).mousemove(function(e) {
-        postMouseEvent("MOUSEMOVE", e);
-      });
-
-      intervalId = setInterval("drawFrame()", 30)
-    </script>
-  </body>
-</html>`
-	template, err := template.New("basic").Parse(container)
+  data, err := ioutil.ReadFile("resource/container.html")
+  container := string( data )
+  if err != nil {
+		return err
+	}
+	template,  err := template.New("basic").Parse(container)
 	if err != nil {
 		return err
 	}
